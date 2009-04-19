@@ -90,16 +90,6 @@ class ArchDB:
 		self.execute (req, args, False)
 		return self.cur.fetchall()
 
-def getNext (self):
-	id = None
-	ret = self.db_all.getNext ()
-	if ret is None:
-		return False
-	else:
-		(self.id,) = ret
-	self.exid = None
-	return self.get()
-
 
 # Classe WebQuery: Gestion des recherches sur le web
 class WebQuery
