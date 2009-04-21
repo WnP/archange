@@ -1,0 +1,19 @@
+arch_ange: bot du canal #archlinux-fr@freenode
+
+Ce dépôt contient:
+src/		le module contenant les fonctionnalités du bot
+tools/		script permettant l'initialisation, notamment la création de la 
+			base (sqlite)
+supybot/	le plugin 'supybot' à proprement parler
+
+
+Mise en place rapide (à rendre plus auto -> TODO):
+- Installation de supybot
+- Création du bot à l'aide de 'supybot-wizard'
+- Copie de supybot/plugins/Archfr/ dans le répertoire plugins/ du bot
+- Copie de src/arch.py dans le répertoire plugins/Archfr/ du bot
+- Initialisation de la base avec tools/archdb.sql
+- Tester eventuellement le bot en vous plaçant dans plugins/:
+	supybot-test Archfr
+- Lancement du bot et chargement du plugin 'load Archfr'
+

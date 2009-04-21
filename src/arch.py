@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+###
+# Copyright (c) 2009, Tuxce <tuxce.net@gmail.com>
+#
+#
+###
+
 
 import sqlite3
 import urllib2, urllib

@@ -3,7 +3,6 @@
 
 ###
 # Copyright (c) 2009, Tuxce <tuxce.net@gmail.com>
-# All rights reserved.
 #
 #
 ###
