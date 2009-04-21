@@ -28,8 +28,11 @@ conf.registerGroup(Archfr, 'wiki')
 conf.registerGlobalValue(Archfr.wiki, 'max',
     registry.NonNegativeInteger(2, """Indique le maximum de pages
 		à afficher."""))
+conf.registerGlobalValue(Archfr.wiki, 'site',
+    registry.NonNegativeInteger('wiki_qsearch', """Indique la méthode de
+    recherche par défaut de la commande 'wiki'."""))
 conf.registerGroup(Archfr, 'bug')
-conf.registerGlobalValue(Archfr.bugs, 'max',
+conf.registerGlobalValue(Archfr.bug, 'max',
     registry.NonNegativeInteger(2, """Indique le maximum de bugs
 		à afficher."""))
 conf.registerGroup(Archfr, 'pkg')
@@ -42,7 +45,7 @@ conf.registerGlobalValue(Archfr.pkgfile, 'max',
 		à afficher."""))
 conf.registerGroup(Archfr, 'quote')
 conf.registerGlobalValue(Archfr.quote, 'theme',
-    registry.String('chuck', """Indique le theme des citations.""",
+    registry.String('chuck', """Indique le thème des citations.""",
         private=True))
 
 

@@ -14,7 +14,7 @@ Plugin Archfr.
 Apporte une interactivité au chan #archlinux-fr@freenode
 Fonctionnalités:
 	wiki	-> effectue une recherche sur le wiki (fr/en)
-	bugs	-> recherche un ticket ouvert sur le bugtracker
+	bug	-> recherche un ticket ouvert sur le bugtracker
 	pkg 	-> recherche dans la base des paquets Arch Linux
 	pkgfile	-> recherche un paquet contenant un fichier
 	le bot permet également de répondre à certains phrase ou actions

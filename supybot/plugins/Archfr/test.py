@@ -16,6 +16,11 @@ class ArchfrTestCase(PluginTestCase):
 
     def testArchfr(self):
         # difficult to test, let's just make sure it works
-        self.assertNotError('wiki gnome')
+        self.assertResponse('wiki gnome', 'Pas de résultat')
+        self.assertNotError('wiki wiki_search gnome')
+        self.assertNotError('bug hal fails with ntfs')
+        self.assertNotError('pkgfile kernel')
+        self.assertNotError('pkg kernel')
+        self.assertNotError('pkgfile kernel')
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

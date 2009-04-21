@@ -20,7 +20,6 @@ class ArchDB:
 	def __init__(self, cur=False):
 		ArchDB._count += 1
 		if ArchDB._con is None:
-			self.connecte = False
 			self.connect ()
 		if cur:
 			self.cur = ArchDB._con.cursor ()
@@ -34,7 +33,7 @@ class ArchDB:
 
 	# Se connecte à la base et ouvre un curseur
 	def connect(self):
-		if self.connecte:
+		if ArchDB._con is not None:
 			return True
 		try:
 			ArchDB._con = sqlite3.connect (self._file)
@@ -45,7 +44,7 @@ class ArchDB:
 			return False
 
 	def disconnect (self):
-		if not self.connecte:
+		if ArchDB._con is None:
 			return True
 		try:
 			ArchDB._con.close ()
@@ -213,9 +212,12 @@ class WebQuery:
 				return None
 			pages = p_search.findall (fd.read())
 			fd.close ()
-			for page in pages:
-				self.setPage (site, query, page)
-			return pages
+			if pages:
+				for page in pages:
+					self.setPage (site, query, page.replace (self.sites[site][1], ""))
+				return pages
+			else:
+				return None
 		except:
 			return None
 
@@ -231,7 +233,7 @@ class WebQuery:
 		from result	join page on (result.page_id = page.id)
 		where site_id = ? and query_id = ?"""
 		pages = self.db.getAll (req, [site_id, query_id])
-		if pages is None:
+		if not pages:
 			return self.searchPages (site, query)
 		else:
 			return pages

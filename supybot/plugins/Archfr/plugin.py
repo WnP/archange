@@ -45,28 +45,33 @@ class Archfr(callbacks.Plugin):
 		max = self.registryValue ('wiki.max')
 		pages = self.wq.getPages (site, query)
 		if pages is None:
-			irc.replies("Pas de résultat", to=nick)
+			irc.reply("Pas de résultat", to=nick)
 		else:
-			irc.replies(pages[:max], to=nick)
+			replies = []
+			for page in pages:
+				# TODO: modifier l'accès direct à la var WebQuery.sites !
+				replies += self.wq.sites[site][1] + page[0]
+			irc.replies(replies[:max], to=nick)
 
 	wiki = wrap (wiki, [optional (('literal', 
 		('wiki_qsearch', 'wiki_search', 'wiki_org'))),
-		optional ('nickInChannel'),
-		'text'])
+		optional ('nickInChannel'),	'text'])
 
-	def bug(self, irc, msg, args, site, nick, query):
+	def bug(self, irc, msg, args, nick, query):
 		"""[nick] terme
 		Recherche un bug correspondant à 'terme'.
 		"""
 		max = self.registryValue ('bug.max')
 		pages = self.wq.getPages ('bugs_org', query)
 		if pages is None:
-			irc.replies("Pas de résultat", to=nick)
+			irc.reply("Pas de résultat", to=nick)
 		else:
-			irc.replies(pages[:max], to=nick)
+			replies = []
+			for page in pages:
+				replies += page[0]
+			irc.replies(replies[:max], to=nick)
 
-	bug = wrap (bug, [optional ('nickInChannel'),
-		'text'])
+	bug = wrap (bug, [optional ('nickInChannel'), 'text'])
 
 	def pkgfile(self, irc, msg, args, nick, query):
 		"""[nick] path
@@ -74,8 +79,8 @@ class Archfr(callbacks.Plugin):
 		"""
 		max = self.registryValue ('pkgfile.max')
 		pkgs = self.ap.searchFile (query, max)
-		if pkgs is None:
-			irc.replies("Pas de résultat", to=nick)
+		if not pkgs:
+			irc.reply("Pas de résultat", to=nick)
 		else:
 			# arch.ArchPackage.searchFile retourne une liste de lignes
 			# chaque ligne:
@@ -88,8 +93,7 @@ class Archfr(callbacks.Plugin):
 				reply += [pkg[0] + '/' + pkg[1] + '-' + pkg[2] + ' ' + pkg[3]]
 			irc.replies(reply, to=nick)
 
-	pkgfile = wrap (pkgfile, [optional ('nickInChannel'),
-		'text'])
+	pkgfile = wrap (pkgfile, [optional ('nickInChannel'), 'text'])
 
 	def pkg(self, irc, msg, args, nick, query):
 		"""[nick] path
@@ -97,8 +101,8 @@ class Archfr(callbacks.Plugin):
 		"""
 		max = self.registryValue ('pkg.max')
 		pkgs = self.ap.searchPkg (query, max)
-		if pkgs is None:
-			irc.replies("Pas de résultat", to=nick)
+		if not pkgs:
+			irc.reply("Pas de résultat", to=nick)
 		else:
 			# arch.ArchPackage.searchPkg retourne une liste de lignes
 			# chaque ligne:
@@ -110,8 +114,7 @@ class Archfr(callbacks.Plugin):
 				reply += [pkg[0] + '/' + pkg[1] + '-' + pkg[2]]
 			irc.replies(reply, to=nick)
 
-	pkg = wrap (pkg, [optional ('nickInChannel'),
-		'text'])
+	pkg = wrap (pkg, [optional ('nickInChannel'), 'text'])
 
 
 	# doPrivmsg est lancé à chaque message
@@ -123,6 +126,3 @@ class Archfr(callbacks.Plugin):
 
 Class = Archfr
 
-
-
-	
