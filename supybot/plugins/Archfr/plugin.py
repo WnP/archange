@@ -41,17 +41,22 @@ class Archfr(callbacks.Plugin):
 		'terme'.
 		"""
 		if site is None:
-			site = self.registryValue ('wiki.site')
-		max = self.registryValue ('wiki.max')
-		pages = self.wq.getPages (site, query)
-		if pages is None:
-			irc.reply("Pas de résultat", to=nick)
+			sites = self.registryValue ('wiki.site')
 		else:
-			replies = []
-			for page in pages:
-				# TODO: modifier l'accès direct à la var WebQuery.sites !
-				replies += self.wq.sites[site][1] + page[0]
-			irc.replies(replies[:max], to=nick)
+			sites = [site]
+		max = self.registryValue ('wiki.max')
+		for site in sites: 
+			pages = self.wq.getPages (site, query)
+			if pages is None:
+				continue
+			else:
+				replies = []
+				for page in pages:
+					# TODO: modifier l'accès direct à la var WebQuery.sites !
+					replies += [self.wq.sites[site][1] + page[0]]
+				irc.replies(replies[:max], to=nick)
+				return
+		irc.reply("Pas de résultat", to=nick)
 
 	wiki = wrap (wiki, [optional (('literal', 
 		('wiki_qsearch', 'wiki_search', 'wiki_org'))),
@@ -61,14 +66,15 @@ class Archfr(callbacks.Plugin):
 		"""[nick] terme
 		Recherche un bug correspondant à 'terme'.
 		"""
+		site = 'bugs_org'
 		max = self.registryValue ('bug.max')
-		pages = self.wq.getPages ('bugs_org', query)
+		pages = self.wq.getPages (site, query)
 		if pages is None:
 			irc.reply("Pas de résultat", to=nick)
 		else:
 			replies = []
 			for page in pages:
-				replies += page[0]
+				replies += [self.wq.sites[site][1] + page[0]]
 			irc.replies(replies[:max], to=nick)
 
 	bug = wrap (bug, [optional ('nickInChannel'), 'text'])
@@ -115,6 +121,57 @@ class Archfr(callbacks.Plugin):
 			irc.replies(reply, to=nick)
 
 	pkg = wrap (pkg, [optional ('nickInChannel'), 'text'])
+
+	# La fonction qui tue... (surtout parce que je sais pas du tout comment 
+	# faire pour qu'elle soit plus ou moins simple!)
+	# "talk" pour gérer les réponses du bot.
+	# usage:
+	#	talk <group|rule|reply> <add|del|list> [id] [content]
+	def talk (self, irc, msg, args, context, action, id, content):
+		"""<group|rule|reply> <add|del|list> [id] [content]
+		Configure les réponses du bot.
+		"""
+		def list (func):
+			ret = []
+			tab = func()
+			if tab is not None:
+				for line in tab:
+					ret += [str(line[0]) + "\t" + line [1]]
+			return ret
+
+		if action == 'list':
+			ret = list ({'group': self.reply.listGroup,
+					'rule': self.reply.listRule,
+					'reply': self.reply.listReply}[context])
+			if not ret:
+				ret = ["Pas d'éléments"]
+			irc.replies (ret)
+		elif action == 'del':
+			if not id:
+				irc.error ("L'action 'del' requiert un 'id'", Raise=True)
+			else:
+				{'group': self.reply.delGroup,
+						'rule': self.reply.delRule ,
+						'reply': self.reply.delReply}[context](id)
+				irc.replySuccess()
+		elif action == 'add':
+			if (context != 'group' and not id) or not content:
+				irc.error ("Arguments invalides -> help talk", Raise=True)
+			else:
+				if context == 'group':
+					ret = self.reply.addGroup (content)
+				elif context == 'rule':
+					ret = self.reply.addRule (id, content)
+				elif context == 'reply':
+					ret = self.reply.addReply (id, content)
+				if ret:
+					irc.replySuccess()
+				else:
+					irc.error('Erreur :/', Raise=True)
+
+	talk = wrap (talk, ['admin', ('literal', ('group', 'rule', 'reply')),
+		('literal', ('add', 'del', 'list')),
+		optional('id'), optional ('text')])
 
 
 	# doPrivmsg est lancé à chaque message

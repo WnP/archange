@@ -29,8 +29,9 @@ conf.registerGlobalValue(Archfr.wiki, 'max',
     registry.NonNegativeInteger(2, """Indique le maximum de pages
 		à afficher."""))
 conf.registerGlobalValue(Archfr.wiki, 'site',
-    registry.NonNegativeInteger('wiki_qsearch', """Indique la méthode de
-    recherche par défaut de la commande 'wiki'."""))
+    registry.SpaceSeparatedListOfStrings (['wiki_qsearch', 'wiki_search',
+        'wiki_org'], """Indique la méthode de recherche par défaut de 
+        la commande 'wiki'."""))
 conf.registerGroup(Archfr, 'bug')
 conf.registerGlobalValue(Archfr.bug, 'max',
     registry.NonNegativeInteger(2, """Indique le maximum de bugs

@@ -22,5 +22,10 @@ class ArchfrTestCase(PluginTestCase):
         self.assertNotError('pkgfile kernel')
         self.assertNotError('pkg kernel')
         self.assertNotError('pkgfile kernel')
+        self.assertNotError('talk group list')
+        self.assertError('talk list')
+        self.assertError('talk group add')
+        self.assertNotError('talk group add test')
+        self.assertNotError('talk group del 1')
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

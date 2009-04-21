@@ -386,13 +386,13 @@ class Reply:
 
 	def __init__(self):
 		self.db = ArchDB ()
-		self.loadGroupes ()
+		self.loadGroups ()
 		random.seed()
 
 	def __del__(self):
 		del self.db
 
-	def loadGroupes (self):
+	def loadGroups (self):
 		# groupes:
 		#	clé: id du groupe
 		#	0: contenu du groupe
@@ -401,43 +401,43 @@ class Reply:
 		# rules: { id : r_group_id }
 		# replies: { id : r_group_id }
 
-		self.groupes = {}
+		self.groups = {}
 		self.rules = {}
 		self.replies = {}
 		req = "select id, content from r_group"
-		r_groupes = self.db.getAll (req)
-		if r_groupes is None:
+		r_groups = self.db.getAll (req)
+		if r_groups is None:
 			return False
-		for r_groupe in r_groupes:
-			self.groupes[r_groupe[0]] = [r_groupe[1], {}, {}]
+		for r_group in r_groups:
+			self.groups[r_group[0]] = [r_group[1], {}, {}]
 			req = "select id, content from rule where r_group_id = ?"
-			r_rules = self.db.getAll (req, [r_groupe[0]])
+			r_rules = self.db.getAll (req, [r_group[0]])
 			if r_rules is not None:
 				for r_rule in r_rules:
 					try:
 						p = re.compile (r_rule[1])
 					except:
 						continue
-					self.rules[r_rule[0]] = r_groupe[0]
-					self.groupes[r_groupe[0]][1][r_rule[0]] = p
+					self.rules[r_rule[0]] = r_group[0]
+					self.groups[r_group[0]][1][r_rule[0]] = p
 			req = "select id, content from reply where r_group_id = ? "
-			r_replies = self.db.getAll (req, [r_groupe[0]])
+			r_replies = self.db.getAll (req, [r_group[0]])
 			if r_replies is not None:
 				for r_reply in r_replies:
-					self.replies[r_reply[0]] = r_groupe[0]
-					self.groupes[r_groupe[0]][2][r_reply[0]] = r_reply[1]
+					self.replies[r_reply[0]] = r_group[0]
+					self.groups[r_group[0]][2][r_reply[0]] = r_reply[1]
 
 	
-	def delGroupe (self, groupe_id):
+	def delGroup (self, group_id):
 		self.db.setCommit (False);
 		req = "delete from rule where r_group_id = ?"
-		self.db.executeCmd (req, [groupe_id])
+		self.db.executeCmd (req, [group_id])
 		req = "delete from reply where r_group_id = ?"
-		self.db.executeCmd (req, [groupe_id])
+		self.db.executeCmd (req, [group_id])
 		req = "delete from r_group where id = ?"
-		self.db.executeCmd (req, [groupe_id])
+		self.db.executeCmd (req, [group_id])
 		try:
-			del self.groupes[groupe_id]
+			del self.groups[group_id]
 		except:
 			pass
 		self.db.commit ();
@@ -447,8 +447,8 @@ class Reply:
 		req = "delete from reply where id = ?"
 		self.db.executeCmd (req, [reply_id])
 		try:
-			groupe_id = self.replies[reply_id]
-			del self.groupes[groupe_id][2][reply_id]
+			group_id = self.replies[reply_id]
+			del self.groups[group_id][2][reply_id]
 			del self.replies[reply_id]
 		except:
 			pass
@@ -457,66 +457,78 @@ class Reply:
 		req = "delete from rule where id = ?"
 		self.db.executeCmd (req, [rule_id])
 		try:
-			groupe_id = self.rules[rule_id]
-			del self.groupes[groupe_id][1][rule_id]
+			group_id = self.rules[rule_id]
+			del self.groups[group_id][1][rule_id]
 			del self.rules[rule_id]
 		except:
 			pass
 
 
-	def addGroupe (self, content):
+	def addGroup (self, content):
 		req = "insert into r_group (content) values (?)"
 		if self.db.executeCmd (req, [content]):
 			req = "select max(id) from r_group"
-			groupe_id = self.db.getOne (req)
-			if groupe_id:
-				self.groupes[groupe_id] = [content, {}, {}]
+			group_id = self.db.getOne (req)
+			if group_id:
+				self.groups[group_id] = [content, {}, {}]
 				return True
 		return False
 	
-	def addRule (self, groupe_id, content):
+	def addRule (self, group_id, content):
 		try:
-			self.groupes[groupe_id]
+			self.groups[group_id]
 			p = re.compile (content)
 		except:
 			return False
 		req = "insert into rule (content, r_group_id) values (?, ?)"
-		if self.db.executeCmd (req, [content, groupe_id]):
+		if self.db.executeCmd (req, [content, group_id]):
 			req = "select max(id) from rule"
 			rule_id = self.db.getOne (req)
 			if rule_id:
-				self.groupes[groupe_id][1][rule_id] = p
-				self.rules[rule_id] = groupe_id
+				self.groups[group_id][1][rule_id] = p
+				self.rules[rule_id] = group_id
 				return True
 		return False
 
-	def addReply (self, groupe_id, content):
+	def addReply (self, group_id, content):
 		try:
-			self.groupes[groupe_id]
+			self.groups[group_id]
 		except:
 			return False
 		req = "insert into reply (content, r_group_id) values (?, ?)"
-		if self.db.executeCmd (req, [content, groupe_id]):
+		if self.db.executeCmd (req, [content, group_id]):
 			req = "select max(id) from reply"
 			reply_id = self.db.getOne (req)
 			if reply_id:
-				self.groupes[groupe_id][2][reply_id] = content
-				self.replies[reply_id] = groupe_id
+				self.groups[group_id][2][reply_id] = content
+				self.replies[reply_id] = group_id
 				return True
 		return False
 
-	def modifyGroupe (self, groupe_id, content):
+	def modifyGroup (self, group_id, content):
 		req = "update r_group  set content = ? where id = ?"
-		if self.db.executeCmd (req, [content, groupe_id]):
-			self.groupes[groupe_id][0] = content
+		if self.db.executeCmd (req, [content, group_id]):
+			self.groups[group_id][0] = content
 			return True
 		return False
 
+	def listGroup (self):
+		req = "select id, content from r_group"
+		return self.db.getAll (req)
+
+	def listRule (self):
+		req = "select id, content from rule"
+		return self.db.getAll (req)
+
+	def listReply (self):
+		req = "select id, content from reply"
+		return self.db.getAll (req)
+
 	def randomReply (self, str):
-		for i, groupe in self.groupes.items ():
-			if len (groupe[2]) != 0:
-				for j, rule in groupe[1].items ():
+		for i, group in self.groups.items ():
+			if len (group[2]) != 0:
+				for j, rule in group[1].items ():
 					if rule.findall (str):
-						return groupe[2][groupe[2].keys ()[random.randint (0, len (groupe[2]) - 1)]]
+						return group[2][group[2].keys ()[random.randint (0, len (group[2]) - 1)]]
 		return False
 
