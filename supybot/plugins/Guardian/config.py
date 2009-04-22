@@ -27,7 +27,7 @@ conf.registerGroup(Guardian, 'flood', private=True)
 conf.registerGlobalValue(Guardian.flood, 'interval',
     registry.NonNegativeInteger(7, """Indique l'interval de temps de contrôle
         du flood (en sec)."""))
-conf.registerGlobalValue(Guardian.flood, 'msg',
+conf.registerGlobalValue(Guardian.flood, 'max',
     registry.NonNegativeInteger(5, """Indique le nombre de message maximum.
         """))
 conf.registerChannelValue(Guardian.flood, 'enable',
@@ -40,7 +40,7 @@ conf.registerGroup(Guardian, 'repeat', private=True)
 conf.registerGlobalValue(Guardian.repeat, 'interval',
     registry.NonNegativeInteger(20, """Indique l'interval de temps de contrôle
         de la répétition (en sec)."""))
-conf.registerGlobalValue(Guardian.repeat, 'msg',
+conf.registerGlobalValue(Guardian.repeat, 'max',
     registry.NonNegativeInteger(4, """Indique le nombre de message maximum.
         """))
 conf.registerChannelValue(Guardian.repeat, 'enable',

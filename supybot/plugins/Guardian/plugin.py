@@ -17,7 +17,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 
-import arch
+import time
 
 
 
@@ -37,7 +37,7 @@ class Guardian(callbacks.Plugin):
 		self.nicks = {}
 
 
-	def ctrlAbus (self, tab, interval, max)
+	def ctrlAbus (self, tab, interval, max):
 		while tab[len (tab) - 1] - tab[0] > interval:
 			tab.pop (0)
 		if len (tab) >= max:
@@ -62,7 +62,8 @@ class Guardian(callbacks.Plugin):
 					self.registryValue ('flood.interval'),
 					self.registryValue ('flood.max')):
 				# kick le boulet!
-				#irc.sendMsg(ircmsgs.kick(recipients, msg.nick, "flood"))
+				irc.sendMsg(ircmsgs.IrcMsg('remove %s %s : %s' % (channel, 
+					msg.nick, self.registryValue ('flood.reason'))))
 				# remise à 0
 				self.nicks[msg.nick][channel][0] = list ()
 
@@ -88,7 +89,8 @@ class Guardian(callbacks.Plugin):
 						self.registryValue ('repeat.interval'),
 						self.registryValue ('repeat.max')):
 					# kick le boulet!
-					#irc.sendMsg(ircmsgs.kick(recipients, msg.nick, "flood"))
+					irc.sendMsg(ircmsgs.IrcMsg('remove %s %s : %s' % (channel, 
+						msg.nick, self.registryValue ('flood.reason'))))
 					# remise à 0
 					self.nicks[msg.nick][channel][1][0] = ''
 					self.nicks[msg.nick][channel][1][1] = list()
