@@ -423,7 +423,7 @@ class Reply:
 			if r_rules is not None:
 				for r_rule in r_rules:
 					try:
-						p = re.compile (r_rule[1])
+						p = re.compile (r_rule[1], re.I)
 					except:
 						continue
 					self.rules[r_rule[0]] = r_group[0]
@@ -525,11 +525,11 @@ class Reply:
 		return self.db.getAll (req)
 
 	def listRule (self):
-		req = "select id, content from rule"
+		req = "select id, content, r_group_id from rule"
 		return self.db.getAll (req)
 
 	def listReply (self):
-		req = "select id, content from reply"
+		req = "select id, content, r_group_id from reply"
 		return self.db.getAll (req)
 
 	def randomReply (self, str):

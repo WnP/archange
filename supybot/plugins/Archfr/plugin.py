@@ -129,6 +129,15 @@ class Archfr(callbacks.Plugin):
 
 	pkg = wrap (pkg, [optional ('nickInChannel'), 'text'])
 
+	def pkgsync(self, irc, msg, args):
+		"""Recharge la base des paquets/fichiers
+		"""
+		self.ap.sync()
+		irc.replySuccess()
+		
+	pkgsync = wrap (pkgsync, ['admin'])
+
+
 	# La fonction qui tue... (surtout parce que je sais pas du tout comment 
 	# faire pour qu'elle soit plus ou moins simple!)
 	# "talk" pour gérer les réponses du bot.
@@ -143,7 +152,10 @@ class Archfr(callbacks.Plugin):
 			tab = func()
 			if tab is not None:
 				for line in tab:
-					ret += [str(line[0]) + "\t" + line [1]]
+					if len(line) > 2:
+						ret += ["(" + str (line[0]) + ") " + line[1] + "(" + str(line[2]) + ")"]
+					else:
+						ret += ["(" + str (line[0]) + ") " + line[1]]
 			return ret
 
 		if action == 'list':
