@@ -219,9 +219,11 @@ class WebQuery:
 			pages = p_search.findall (fd.read())
 			fd.close ()
 			if pages:
+				replies = []
 				for page in pages:
 					self.setPage (site, query, page.replace (self.sites[site][1], ""))
-				return pages
+					replies += [[page]]
+				return replies
 			else:
 				return None
 		except:
