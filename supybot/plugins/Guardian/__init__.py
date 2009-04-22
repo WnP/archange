@@ -9,14 +9,9 @@
 
 
 """
-Plugin Archfr.
-Apporte une interactivité au chan #archlinux-fr@freenode
-Fonctionnalités:
-	wiki	-> effectue une recherche sur le wiki (fr/en)
-	bug     -> recherche un ticket ouvert sur le bugtracker
-	pkg 	-> recherche dans la base des paquets Arch Linux
-	pkgfile	-> recherche un paquet contenant un fichier
-	le bot permet également de répondre à certains phrase ou actions
+Plugin Guardian.
+Implémente une protection au bot.
+Flood / Répétition
 """
 
 import supybot
@@ -40,7 +35,6 @@ import config
 import plugin
 import arch
 reload(plugin) # In case we're being reloaded.
-reload(arch)
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 

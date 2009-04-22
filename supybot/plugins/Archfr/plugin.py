@@ -20,8 +20,16 @@ import arch
 
 
 class Archfr(callbacks.Plugin):
-	"""Add the help for "@plugin help Archfr" here
-	This should describe *how* to use this plugin."""
+	"""
+	Plugin Archfr.
+	Apporte une interactivité au chan #archlinux-fr@freenode
+	Fonctionnalités:
+		wiki	-> effectue une recherche sur le wiki (fr/en)
+		bug		-> recherche un ticket ouvert sur le bugtracker
+		pkg 	-> recherche dans la base des paquets Arch Linux
+		pkgfile	-> recherche un paquet contenant un fichier
+		le bot permet également de répondre à certains phrase ou actions
+	"""
 	# Sqlite ne gère pas les thread, et de toute façon, pour l'instant,
 	# le module arch n'est pas fait pour.
 	threaded = False
