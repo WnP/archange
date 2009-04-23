@@ -29,7 +29,7 @@ insert into site_param (site_id, param_name, param_value) values (1, 'call', 'qs
 insert into site (code, url, slink, method_post, sparam, regexp) values ('wiki_search', 'http://wiki.archlinux.fr', '/', 0, 'id', 'href="(.*?)\?.*wikilink1');
 insert into site_param (site_id, param_name, param_value) values (2, 'do', 'search');
 
-insert into site (code, url, slink, method_post, sparam, regexp) values ('wiki_org', 'http://wiki.archlinux.org/index.php', '/Special:Search', 0, 'search', '<li>.*?href="(.*?)".*search');
+insert into site (code, url, slink, method_post, sparam, regexp) values ('wiki_org', 'http://wiki.archlinux.org/index.php', '/Special:Search', 0, 'search', '<li>.*?href="/index.php(.*?)".*search');
 insert into site_param (site_id, param_name, param_value) values (3, 'fulltext', 'Search');
 
 insert into site (code, url, slink, method_post, sparam, regexp) values ('bugs_org', 'http://bugs.archlinux.org', '/', 0, 'string', 'task_id.*href="(http://bugs.archlinux.org/task/.*?)\?');

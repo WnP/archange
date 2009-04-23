@@ -16,6 +16,7 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import arch
+import random
 
 
 
@@ -37,9 +38,16 @@ class Archfr(callbacks.Plugin):
 	def __init__(self, irc):
 		self.__parent = super (Archfr, self)
 		self.__parent.__init__(irc)
+		random.seed()
+		# Le fichier de la base se trouve par défaut dans le rep 'data' de supybot
+		arch.ArchDB._file = conf.supybot.directories.data.dirize('Archfr.sqlite')
 		self.wq = arch.WebQuery ()
 		self.ap = arch.ArchPackage ()
 		self.reply = arch.Reply ()
+		# Variables pour les citations
+		self.quote_file = None
+		self.quote_fd = None
+		self.quote_theme = ''
 
 	
 	def wiki(self, irc, msg, args, site, nick, query):
@@ -192,6 +200,45 @@ class Archfr(callbacks.Plugin):
 		('literal', ('add', 'del', 'list')),
 		optional('id'), optional ('text')])
 
+	def quote(self, irc, msg, args):
+		theme = self.registryValue ('quote.theme')
+		if theme == '':
+			irc.error ("Pas de thème!", Private=True)
+			return
+		if self.quote_theme != theme:
+			if self.quote_fd is not None:
+				self.quote_fd.close ()
+			self.quote_theme = theme:
+			self.quote_file = conf.supybot.directories.data.dirize(theme)
+			self.quote_index = [0]
+			try:
+				self.quote_fd = open (self.quote_file)
+			except:
+				self.quote_fd = None
+				self.quote_theme = ''
+				irc.error ("Le thème sélectionné n'existe pas!", Private=True)
+				return
+			line = '-'
+			while line != '':
+				line =  self.quote_fd.readline ()
+				if line != '' and line == '%':
+					self.quote_index += [self.quote_fd.tell()]
+		if self.quote_fd:
+			# Se positionne à une ligne au pif
+			self.quote_fd.seek (self.quote_index[random.randint (0,
+				len (self.quote_index) - 1)])
+			# Passe les '%'
+			self.quote_fd.readline ()
+			self.quote_fd.readline ()
+			line = '-'
+			reply = ''
+			while line != '' and line != '%':
+				line =  self.quote_fd.readline ()
+				if line != '' and line != '%':
+					reply += line + "\n"
+			if reply != '':
+				irc.reply (reply[:-1])
+	quote = wrap (quote, [])
 
 	# doPrivmsg est lancé à chaque message
 	def doPrivmsg(self, irc, msg):
