@@ -11,6 +11,7 @@
 
 
 import supybot.utils as utils
+import supybot.conf as conf
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
@@ -203,12 +204,12 @@ class Archfr(callbacks.Plugin):
 	def quote(self, irc, msg, args):
 		theme = self.registryValue ('quote.theme')
 		if theme == '':
-			irc.error ("Pas de thème!", Private=True)
+			irc.error ("Pas de thème!")
 			return
 		if self.quote_theme != theme:
 			if self.quote_fd is not None:
 				self.quote_fd.close ()
-			self.quote_theme = theme:
+			self.quote_theme = theme
 			self.quote_file = conf.supybot.directories.data.dirize(theme)
 			self.quote_index = [0]
 			try:
@@ -216,12 +217,12 @@ class Archfr(callbacks.Plugin):
 			except:
 				self.quote_fd = None
 				self.quote_theme = ''
-				irc.error ("Le thème sélectionné n'existe pas!", Private=True)
+				irc.error ("Le thème sélectionné n'existe pas!")
 				return
 			line = '-'
 			while line != '':
 				line =  self.quote_fd.readline ()
-				if line != '' and line == '%':
+				if line != '' and (line == '%\n' or line == '%'):
 					self.quote_index += [self.quote_fd.tell()]
 		if self.quote_fd:
 			# Se positionne à une ligne au pif
@@ -232,10 +233,10 @@ class Archfr(callbacks.Plugin):
 			self.quote_fd.readline ()
 			line = '-'
 			reply = ''
-			while line != '' and line != '%':
+			while line != '' and line != '%' and line != '%\n':
 				line =  self.quote_fd.readline ()
-				if line != '' and line != '%':
-					reply += line + "\n"
+				if line != '' and line != '%' and line != '%\n':
+					reply += line
 			if reply != '':
 				irc.reply (reply[:-1])
 	quote = wrap (quote, [])

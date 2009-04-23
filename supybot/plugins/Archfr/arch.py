@@ -23,14 +23,10 @@ class ArchDB:
 	_commit = True			# Commiter les changement à chaque requête
 	_file = "archdb.sqlite"	# base sqlite
 
-	def __init__(self, cur=False):
+	def __init__(self):
 		ArchDB._count += 1
 		if ArchDB._con is None:
 			self.connect ()
-		if cur:
-			self.cur = ArchDB._con.cursor ()
-		else:
-			self.cur = ArchDB._cur
 
 	def __del__(self):
 		ArchDB._count -= 1
@@ -75,15 +71,17 @@ class ArchDB:
 	# Execute une requête
 	def execute(self, req, args, commit=False):
 		#print req, args, commit, ArchDB._commit
+		if ArchDB._con is None:
+			self.connect ()
 		try:
 			if not args is None:
 				for i in range (0,len (args)):
 					# utf-8, pas utf-8, là est la question...
 					if isinstance (args[i], basestring ):
 						args[i] = args[i].decode ('utf-8')
-				self.cur.execute (req, tuple (args))
+				ArchDB._cur.execute (req, tuple (args))
 			else:
-				self.cur.execute (req)
+				ArchDB._cur.execute (req)
 			if commit and self._commit:
 				self.commit ()
 			return True
@@ -99,7 +97,7 @@ class ArchDB:
 	# Execute une requête et retourne le premier résultat
 	def getOne(self, req, args=None):
 		if self.execute (req, args, False):
-			row = self.cur.fetchone()
+			row = ArchDB._cur.fetchone()
 			if row:
 				return row[0]
 		return None
@@ -107,17 +105,19 @@ class ArchDB:
 	# Execute une requête et retourne la première ligne du résultat
 	def getFirst(self, req, args=None):
 		self.execute (req, args, False)
-		return self.cur.fetchone()
+		return ArchDB._cur.fetchone()
 	
 
 	# Retourne le résultat suivant
 	def getNext(self):
-		return self.cur.fetchone()
+		if ArchDB._con is None:
+			return None
+		return ArchDB._cur.fetchone()
 
 	# Retourne tous les résultats 
 	def getAll(self, req, args=None):
 		self.execute (req, args, False)
-		return self.cur.fetchall()
+		return ArchDB._cur.fetchall()
 
 
 # Classe WebQuery: Gestion des recherches sur le web
