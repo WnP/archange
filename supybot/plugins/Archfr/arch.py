@@ -485,7 +485,7 @@ class Reply:
 	def addRule (self, group_id, content):
 		try:
 			self.groups[group_id]
-			p = re.compile (content)
+			p = re.compile (content, re.I)
 		except:
 			return False
 		req = "insert into rule (content, r_group_id) values (?, ?)"
@@ -524,13 +524,21 @@ class Reply:
 		req = "select id, content from r_group"
 		return self.db.getAll (req)
 
-	def listRule (self):
+	def listRule (self, group_id=None):
 		req = "select id, content, r_group_id from rule"
-		return self.db.getAll (req)
+		args = None
+		if group_id:
+			req += " where r_group_id = ?"
+			args = [group_id]
+		return self.db.getAll (req, args)
 
-	def listReply (self):
+	def listReply (self, group_id=None):
 		req = "select id, content, r_group_id from reply"
-		return self.db.getAll (req)
+		args = None
+		if group_id:
+			req += " where r_group_id = ?"
+			args = [group_id]
+		return self.db.getAll (req, args)
 
 	def randomReply (self, str):
 		for i, group in self.groups.items ():

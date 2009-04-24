@@ -50,7 +50,11 @@ class Archfr(callbacks.Plugin):
 		self.quote_fd = None
 		self.quote_theme = ''
 
-	
+	def die(self):
+		if self.quote_fd is not None:
+			self.quote_fd.close ()
+
+
 	def wiki(self, irc, msg, args, site, nick, query):
 		"""[site] [nick] terme
 		Recherche dans 'site' une page correspondant à
@@ -156,21 +160,20 @@ class Archfr(callbacks.Plugin):
 		"""<group|rule|reply> <add|del|list> [id] [content]
 		Configure les réponses du bot.
 		"""
-		def list (func):
+		if action == 'list':
 			ret = []
-			tab = func()
-			if tab is not None:
+			if context == 'group':
+				tab = self.reply.listGroup ()
+			elif context == 'rule':
+				tab = self.reply.listRule (id)
+			elif context == 'reply':
+				tab = self.reply.listReply (id)
+			if tab:
 				for line in tab:
 					if len(line) > 2:
 						ret += ["(" + str (line[0]) + ") " + line[1] + "(" + str(line[2]) + ")"]
 					else:
 						ret += ["(" + str (line[0]) + ") " + line[1]]
-			return ret
-
-		if action == 'list':
-			ret = list ({'group': self.reply.listGroup,
-					'rule': self.reply.listRule,
-					'reply': self.reply.listReply}[context])
 			if not ret:
 				ret = ["Pas d'éléments"]
 			irc.replies (ret)
@@ -202,6 +205,9 @@ class Archfr(callbacks.Plugin):
 		optional('id'), optional ('text')])
 
 	def quote(self, irc, msg, args):
+		"""
+		Affiche une citation.
+		"""
 		theme = self.registryValue ('quote.theme')
 		if theme == '':
 			irc.error ("Pas de thème!")
@@ -238,7 +244,7 @@ class Archfr(callbacks.Plugin):
 				if line != '' and line != '%' and line != '%\n':
 					reply += line
 			if reply != '':
-				irc.reply (reply[:-1])
+				irc.reply (reply[:-1], prefixNick=False)
 	quote = wrap (quote, [])
 
 	# doPrivmsg est lancé à chaque message
