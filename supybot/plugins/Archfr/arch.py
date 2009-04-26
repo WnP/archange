@@ -13,7 +13,13 @@ import urllib2, urllib
 import tarfile, tempfile
 import re
 import random
-
+import json
+import sys
+# Foutu changement de version avec changement d'API...
+if sys.version_info < (2, 6, 0):
+	json_load = json.read
+else:
+	json_load = json.loads
 
 # Classe ArchDB: Gestion du fichier de données
 class ArchDB:
@@ -364,6 +370,8 @@ class ArchPackage:
 					file_info = file_tgz.extractfile(pkgfile)
 					for path in file_info.readlines():
 						#print path
+						# Ajoute le '/' au début
+						path = '/' + path
 						if path[-1] == '\n':
 							self.addFile (pkg_id, path[:-1])
 						else:
@@ -387,6 +395,38 @@ class ArchPackage:
 		req = """select repo_name, pkg_name, version, path
 		from repo_pkg_file where path like ? limit ?"""
 		return self.db.getAll (req, ['%' + search + '%', max])
+
+#Classe Aur: Gestion des recherches AUR
+class Aur:
+
+	def __init__(self):
+		self.aur_url = 'http://aur.archlinux.org'
+		self.aur_pkg_url = self.aur_url + '/packages.php'
+		self.aur_rpc_url = self.aur_url + '/rpc.php'
+		self.aur_rpc_param = {'type': 'search',
+				'arg': ''}
+
+	def getPkgUrl (self, id):
+		return self.aur_pkg_url + '?ID=' + str (id)
+
+
+	def search (self, content):
+		self.aur_rpc_param['arg'] = content
+		vars = urllib.urlencode (self.aur_rpc_param)
+		try:
+			fd = urllib2.urlopen (self.aur_rpc_url +
+				'?' + vars)
+			results = json_load (fd.read())['results']
+			ret = []
+			for result in results:
+				ret += [[result['Name'], 
+						result['Version'],
+						result['ID'],
+						result['Description']]]
+			return ret
+		except:
+			return None
+
 
 
 # Classe Reply: Gestion des réponses du bot
@@ -547,4 +587,5 @@ class Reply:
 					if rule.findall (str):
 						return group[2][group[2].keys ()[random.randint (0, len (group[2]) - 1)]]
 		return False
+
 

@@ -20,7 +20,6 @@ import arch
 import random
 
 
-
 class Archfr(callbacks.Plugin):
 	"""
 	Plugin Archfr.
@@ -44,6 +43,7 @@ class Archfr(callbacks.Plugin):
 		arch.ArchDB._file = conf.supybot.directories.data.dirize('Archfr.sqlite')
 		self.wq = arch.WebQuery ()
 		self.ap = arch.ArchPackage ()
+		self.aur_site = arch.Aur ()
 		self.reply = arch.Reply ()
 		# Variables pour les citations
 		self.quote_file = None
@@ -81,6 +81,26 @@ class Archfr(callbacks.Plugin):
 	wiki = wrap (wiki, [optional (('literal', 
 		('wiki_qsearch', 'wiki_search', 'wiki_org'))),
 		optional ('nickInChannel'),	'text'])
+
+
+	# La fonction est appelé par 'pkg', d'où la différence de nom avec la
+	# commande IRC.
+	def aur_func(self, irc, msg, args, nick, query):
+		"""[nick] terme
+		Recherche un paquet correspondant à 'terme' dans AUR.
+		"""
+		max = self.registryValue ('aur.max')
+		pkgs = self.aur_site.search (query)
+		if pkgs:
+			replies = []
+			for pkg in pkgs:
+				replies += [pkg[0] + ' ' + pkg[1] + ' ' + 
+						self.aur_site.getPkgUrl(pkg[2])]
+			irc.replies(replies[:max], to=nick)
+		else:
+			irc.reply("Pas de résultat", to=nick)
+
+	aur = wrap (aur_func, [optional ('nickInChannel'), 'text'])
 
 	def bug(self, irc, msg, args, nick, query):
 		"""[nick] terme
@@ -122,13 +142,14 @@ class Archfr(callbacks.Plugin):
 	pkgfile = wrap (pkgfile, [optional ('nickInChannel'), 'text'])
 
 	def pkg(self, irc, msg, args, nick, query):
-		"""[nick] path
-		Recherche un paquet dont un fichier correspond à *'path'*.
+		"""[nick] terme
+		Recherche un paquet correspondant à '*terme*' et bascule éventuellement
+		sur AUR.
 		"""
 		max = self.registryValue ('pkg.max')
 		pkgs = self.ap.searchPkg (query, max)
 		if not pkgs:
-			irc.reply("Pas de résultat", to=nick)
+			self.aur_func (irc, msg, args, nick, query)
 		else:
 			# arch.ArchPackage.searchPkg retourne une liste de lignes
 			# chaque ligne:
