@@ -227,7 +227,8 @@ class WebQuery:
 			if pages:
 				replies = []
 				for page in pages:
-					self.setPage (site, query, page.replace (self.sites[site][1], ""))
+					page = page.replace (self.sites[site][1], "")
+					self.setPage (site, query, page)
 					replies += [[page]]
 				return replies
 			else:
