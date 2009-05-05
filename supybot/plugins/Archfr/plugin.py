@@ -108,7 +108,7 @@ class Archfr(callbacks.Plugin):
 		"""
 		site = 'bugs_org'
 		max = self.registryValue ('bug.max')
-		pages = self.wq.getPages (site, query)
+		pages = self.wq.searchPages (site, query, False)
 		if pages is None:
 			irc.reply("Pas de résultat", to=nick)
 		else:

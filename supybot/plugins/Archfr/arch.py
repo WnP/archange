@@ -206,7 +206,7 @@ class WebQuery:
 		values (?, ?, ?)"""
 		return self.db.executeCmd (req, [site_id, query_id, page_id])
 
-	def searchPages (self, site, query):
+	def searchPages (self, site, query, cache=True):
 		try:
 			site_id = self.sites[site][0]
 			url_base = self.sites[site][1]
@@ -228,7 +228,8 @@ class WebQuery:
 				replies = []
 				for page in pages:
 					page = page.replace (self.sites[site][1], "")
-					self.setPage (site, query, page)
+					if cache:
+						self.setPage (site, query, page)
 					replies += [[page]]
 				return replies
 			else:
