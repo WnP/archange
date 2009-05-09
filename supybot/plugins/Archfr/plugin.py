@@ -54,6 +54,26 @@ class Archfr(callbacks.Plugin):
 		if self.quote_fd is not None:
 			self.quote_fd.close ()
 
+	def web_query (self, irc, site, query, max, nick, ret=True, cache=True):
+		if cache:
+			pages = self.wq.getPages (site, query)
+		else:
+			pages = self.wq.searchPages (site, query, cache)
+		if pages:
+			replies = []
+			for page in pages:
+				# TODO: modifier l'accès direct à la var WebQuery.sites !
+				replies += [self.wq.sites[site][1] + page[0]]
+			if max != 0:
+				irc.replies(replies[:max], to=nick)
+			else:
+				irc.replies(replies, to=nick)
+			return True
+		else:
+			if ret:
+				irc.reply("Pas de résultat", to=nick)
+			return False
+
 
 	def wiki(self, irc, msg, args, site, nick, query):
 		"""[site] [nick] terme
@@ -66,15 +86,7 @@ class Archfr(callbacks.Plugin):
 			sites = [site]
 		max = self.registryValue ('wiki.max')
 		for site in sites: 
-			pages = self.wq.getPages (site, query)
-			if pages is None:
-				continue
-			else:
-				replies = []
-				for page in pages:
-					# TODO: modifier l'accès direct à la var WebQuery.sites !
-					replies += [self.wq.sites[site][1] + page[0]]
-				irc.replies(replies[:max], to=nick)
+			if self.web_query (irc, site, query, max, nick, False):
 				return
 		irc.reply("Pas de résultat", to=nick)
 
@@ -83,13 +95,27 @@ class Archfr(callbacks.Plugin):
 		optional ('nickInChannel'),	'text'])
 
 
-	# La fonction est appelé par 'pkg', d'où la différence de nom avec la
+	def web(self, irc, msg, args, site, nick, query):
+		"""[site] [nick] terme)
+		Recherche 'terme' dans 'site'.
+		"""
+		max = self.registryValue ('web.max')
+		if not site:
+			site = self.registryValue ('web.site')
+		self.web_query (irc, site, query, max, nick)
+
+	web = wrap (web, [optional (('literal', 
+		('wiki_qsearch', 'wiki_search', 'wiki_org', 'scroogle'))), 
+		optional ('nickInChannel'),
+		'text'])
+
+	# La fonction est appelée par 'pkg', d'où la différence de nom avec la
 	# commande IRC.
 	def aur_func(self, irc, msg, args, nick, query):
 		"""[nick] terme
 		Recherche un paquet correspondant à 'terme' dans AUR.
 		"""
-		max = self.registryValue ('aur.max')
+		max = self.registryValue ('pkg.max')
 		pkgs = self.aur_site.search (query)
 		if pkgs:
 			replies = []
@@ -108,14 +134,7 @@ class Archfr(callbacks.Plugin):
 		"""
 		site = 'bugs_org'
 		max = self.registryValue ('bug.max')
-		pages = self.wq.searchPages (site, query, False)
-		if pages is None:
-			irc.reply("Pas de résultat", to=nick)
-		else:
-			replies = []
-			for page in pages:
-				replies += [self.wq.sites[site][1] + page[0]]
-			irc.replies(replies[:max], to=nick)
+		self.web_query (irc, site, query, max, nick)
 
 	bug = wrap (bug, [optional ('nickInChannel'), 'text'])
 
