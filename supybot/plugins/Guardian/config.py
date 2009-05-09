@@ -30,9 +30,15 @@ conf.registerGlobalValue(Guardian.flood, 'interval',
 conf.registerGlobalValue(Guardian.flood, 'max',
     registry.NonNegativeInteger(5, """Indique le nombre de message maximum.
         """))
+conf.registerGlobalValue(Guardian.flood, 'maxKick',
+    registry.NonNegativeInteger(5, """Indique le nombre de kick minimum avant
+    un bannissement."""))
+conf.registerGlobalValue(Guardian.flood, 'banPeriod',
+    registry.NonNegativeInteger(3600, """Période de bannissement en secondes.
+        """))
 conf.registerChannelValue(Guardian.flood, 'enable',
     registry.Boolean (False, """Active le contrôle du flood."""))
-conf.registerGlobalValue(Guardian.flood, 'reason',
+conf.registerGlobalValue(Guardian.flood, 'kickReason',
     registry.String ("cf. pastebin", """L'insulte (amicale bien sûr) à envoyer au
         boulet (en le kickant évidemment)."""))
 
@@ -43,9 +49,15 @@ conf.registerGlobalValue(Guardian.repeat, 'interval',
 conf.registerGlobalValue(Guardian.repeat, 'max',
     registry.NonNegativeInteger(4, """Indique le nombre de message maximum.
         """))
+conf.registerGlobalValue(Guardian.repeat, 'maxKick',
+    registry.NonNegativeInteger(5, """Indique le nombre de kick minimum avant
+    un bannissement."""))
+conf.registerGlobalValue(Guardian.repeat, 'banPeriod',
+    registry.NonNegativeInteger(3600, """Période de bannissement en secondes.
+        """))
 conf.registerChannelValue(Guardian.repeat, 'enable',
     registry.Boolean (False, """Active le contrôle de répétition."""))
-conf.registerGlobalValue(Guardian.repeat, 'reason',
+conf.registerGlobalValue(Guardian.repeat, 'kickReason',
     registry.String ("C'est bon, on a compris!", """L'insulte (amicale bien sûr) à envoyer au
         boulet (en le kickant évidemment)."""))
 
