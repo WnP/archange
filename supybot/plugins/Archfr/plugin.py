@@ -134,7 +134,7 @@ class Archfr(callbacks.Plugin):
 		"""
 		site = 'bugs_org'
 		max = self.registryValue ('bug.max')
-		self.web_query (irc, site, query, max, nick)
+		self.web_query (irc, site, query, max, nick, True, False)
 
 	bug = wrap (bug, [optional ('nickInChannel'), 'text'])
 

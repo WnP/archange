@@ -48,7 +48,7 @@ conf.registerGlobalValue(Archfr.bug, 'max',
 conf.registerGroup(Archfr, 'pkg')
 conf.registerGlobalValue(Archfr.pkg, 'max',
     registry.NonNegativeInteger(2, """Indique le maximum de paquets
-		à afficher (commande 'pkg' et 'aur'."""))
+		à afficher (commande 'pkg' et 'aur')."""))
 
 conf.registerGroup(Archfr, 'pkgfile')
 conf.registerGlobalValue(Archfr.pkgfile, 'max',
