@@ -53,7 +53,6 @@ class Guardian(callbacks.Plugin):
 		self.nicks[nick][channel]["flood"].append (int (time.time()))
 		if self.nicks[nick][channel]["last_msg"] != msg:
 			self.nicks[nick][channel]["repeat"] = list ()
-		else:
 			self.nicks[nick][channel]["last_msg"] = msg
 		self.nicks[nick][channel]["repeat"].append (int (time.time()))
 			
