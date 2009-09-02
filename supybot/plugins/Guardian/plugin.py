@@ -28,6 +28,7 @@ class Guardian(callbacks.Plugin):
 	Flood / Répétition
 	"""
 	threaded = True
+	noIgnore = True
 
 	def __init__(self, irc):
 		self.__parent = super (Guardian, self)
