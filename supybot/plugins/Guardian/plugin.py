@@ -41,6 +41,30 @@ class Guardian(callbacks.Plugin):
 		self.nicks = {}
 		self.nicks_moderated = list ()
 
+
+	def sameMsg (self, s1, s2):
+		# TODO: fixer les seuils dans la config !
+		if len (s1) > len (s2):
+			p1 = s1
+			p2 = s2
+		else:
+			p1 = s2
+			p2 = s1
+		t = len (p1) 
+		m = t - len (p2)
+		t *= 1.0
+		if m / t > 0.9:
+			return False
+		j = 0
+		for l in p2:
+			if l != p1[j]:
+				m += 1
+			j += 1
+		if m / t  < 0.1:
+			return True
+		return False
+
+		
 	def addNickMsg (self, nick, channel, msg):
 		try:
 			self.nicks[nick][channel]
@@ -52,7 +76,7 @@ class Guardian(callbacks.Plugin):
 			self.nicks[nick][channel] = { "kick": 0, "last_msg": '',
 					"flood": list (), "repeat": list () } 
 		self.nicks[nick][channel]["flood"].append (int (time.time()))
-		if self.nicks[nick][channel]["last_msg"] != msg:
+		if not self.sameMsg (self.nicks[nick][channel]["last_msg"], msg):
 			self.nicks[nick][channel]["repeat"] = list ()
 			self.nicks[nick][channel]["last_msg"] = msg
 		self.nicks[nick][channel]["repeat"].append (int (time.time()))
