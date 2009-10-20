@@ -38,9 +38,11 @@ __url__ = 'http://www.archlinux.fr/'
 
 import config
 import plugin
-import arch
+import archlinux
+import websearch
 reload(plugin) # In case we're being reloaded.
-reload(arch)
+reload(archlinux)
+reload(websearch)
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 

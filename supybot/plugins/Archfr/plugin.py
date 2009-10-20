@@ -16,7 +16,9 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-import arch
+# installation de pyarchlinux et pywebsearch nécessaire
+import archlinux
+import websearch
 import random
 
 
@@ -31,20 +33,17 @@ class Archfr(callbacks.Plugin):
 		pkgfile	-> recherche un paquet contenant un fichier
 		le bot permet également de répondre à certains phrase ou actions
 	"""
-	# Sqlite ne gère pas les thread, et de toute façon, pour l'instant,
-	# le module arch n'est pas fait pour.
-	threaded = False
+	threaded = True
 
 	def __init__(self, irc):
 		self.__parent = super (Archfr, self)
 		self.__parent.__init__(irc)
 		random.seed()
 		# Le fichier de la base se trouve par défaut dans le rep 'data' de supybot
-		arch.ArchDB._file = conf.supybot.directories.data.dirize('Archfr.sqlite')
-		self.wq = arch.WebQuery ()
-		self.ap = arch.ArchPackage ()
-		self.aur_site = arch.Aur ()
-		self.reply = arch.Reply ()
+		self.wq = websearch.WebSearch (conf.supybot.directories.data.dirize('websearch.cfg'))
+		self.ap = archlinux.PacmanDB (conf.supybot.directories.data.dirize('Archfr.sqlite'))
+		self.aur_site = archlinux.Aur ()
+		# self.reply = arch.Reply ()
 		# Variables pour les citations
 		self.quote_file = None
 		self.quote_fd = None
@@ -53,21 +52,17 @@ class Archfr(callbacks.Plugin):
 	def die(self):
 		if self.quote_fd is not None:
 			self.quote_fd.close ()
+			self.ap.setDb (None)
+			del self.ap
+			del self.wq
 
-	def web_query (self, irc, site, query, max, nick, ret=True, cache=True):
-		if cache:
-			pages = self.wq.getPages (site, query)
-		else:
-			pages = self.wq.searchPages (site, query, cache)
+	def web_query (self, irc, site, query, max, nick, ret=True):
+		pages = self.wq.search (site, query)
 		if pages:
-			replies = []
-			for page in pages:
-				# TODO: modifier l'accès direct à la var WebQuery.sites !
-				replies += [self.wq.sites[site][1] + page[0]]
 			if max != 0:
-				irc.replies(replies[:max], to=nick)
+				irc.replies(pages[0][:max], to=nick)
 			else:
-				irc.replies(replies, to=nick)
+				irc.replies(pages[0], to=nick)
 			return True
 		else:
 			if ret:
@@ -134,7 +129,7 @@ class Archfr(callbacks.Plugin):
 		"""
 		site = 'bugs_org'
 		max = self.registryValue ('bug.max')
-		self.web_query (irc, site, query, max, nick, True, False)
+		self.web_query (irc, site, query, max, nick)
 
 	bug = wrap (bug, [optional ('nickInChannel'), 'text'])
 
@@ -143,7 +138,7 @@ class Archfr(callbacks.Plugin):
 		Recherche un paquet dont un fichier correspond à *'path'*.
 		"""
 		max = self.registryValue ('pkgfile.max')
-		pkgs = self.ap.searchFile (query, max)
+		pkgs = self.ap.searchFile (query)
 		if not pkgs:
 			irc.reply("Pas de résultat", to=nick)
 		else:
@@ -152,11 +147,12 @@ class Archfr(callbacks.Plugin):
 			#  nom du dépot
 			#  nom du paquet
 			#  version du paquet
+			#  release du paquet
 			#  chemin du fichier
 			reply = []
 			for pkg in pkgs:
-				reply += [pkg[0] + '/' + pkg[1] + '-' + pkg[2] + ' ' + pkg[3]]
-			irc.replies(reply, to=nick)
+				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' ' + pkg[4]]
+			irc.replies(reply[:max], to=nick)
 
 	pkgfile = wrap (pkgfile, [optional ('nickInChannel'), 'text'])
 
@@ -166,7 +162,7 @@ class Archfr(callbacks.Plugin):
 		sur AUR.
 		"""
 		max = self.registryValue ('pkg.max')
-		pkgs = self.ap.searchPkg (query, max)
+		pkgs = self.ap.searchPkg (query)
 		if not pkgs:
 			self.aur_func (irc, msg, args, nick, query)
 		else:
@@ -175,10 +171,12 @@ class Archfr(callbacks.Plugin):
 			#  nom du dépot
 			#  nom du paquet
 			#  version du paquet
+			#  release du paquet
+			#  description du paquet
 			reply = []
 			for pkg in pkgs:
-				reply += [pkg[0] + '/' + pkg[1] + '-' + pkg[2]]
-			irc.replies(reply, to=nick)
+				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' ' + pkg[4]]
+			irc.replies(reply[:max], to=nick)
 
 	pkg = wrap (pkg, [optional ('nickInChannel'), 'text'])
 
@@ -196,53 +194,53 @@ class Archfr(callbacks.Plugin):
 	# "talk" pour gérer les réponses du bot.
 	# usage:
 	#	talk <group|rule|reply> <add|del|list> [id] [content]
-	def talk (self, irc, msg, args, context, action, id, content):
-		"""<group|rule|reply> <add|del|list> [id] [content]
-		Configure les réponses du bot.
-		"""
-		if action == 'list':
-			ret = []
-			if context == 'group':
-				tab = self.reply.listGroup ()
-			elif context == 'rule':
-				tab = self.reply.listRule (id)
-			elif context == 'reply':
-				tab = self.reply.listReply (id)
-			if tab:
-				for line in tab:
-					if len(line) > 2:
-						ret += ["(" + str (line[0]) + ") " + line[1] + "(" + str(line[2]) + ")"]
-					else:
-						ret += ["(" + str (line[0]) + ") " + line[1]]
-			if not ret:
-				ret = ["Pas d'éléments"]
-			irc.replies (ret)
-		elif action == 'del':
-			if not id:
-				irc.error ("L'action 'del' requiert un 'id'", Raise=True)
-			else:
-				{'group': self.reply.delGroup,
-						'rule': self.reply.delRule ,
-						'reply': self.reply.delReply}[context](id)
-				irc.replySuccess()
-		elif action == 'add':
-			if (context != 'group' and not id) or not content:
-				irc.error ("Arguments invalides -> help talk", Raise=True)
-			else:
-				if context == 'group':
-					ret = self.reply.addGroup (content)
-				elif context == 'rule':
-					ret = self.reply.addRule (id, content)
-				elif context == 'reply':
-					ret = self.reply.addReply (id, content)
-				if ret:
-					irc.replySuccess()
-				else:
-					irc.error('Erreur :/', Raise=True)
+	#def talk (self, irc, msg, args, context, action, id, content):
+	#	"""<group|rule|reply> <add|del|list> [id] [content]
+	#	Configure les réponses du bot.
+	#	"""
+	#	if action == 'list':
+	#		ret = []
+	#		if context == 'group':
+	#			tab = self.reply.listGroup ()
+	#		elif context == 'rule':
+	#			tab = self.reply.listRule (id)
+	#		elif context == 'reply':
+	#			tab = self.reply.listReply (id)
+	#		if tab:
+	#			for line in tab:
+	#				if len(line) > 2:
+	#					ret += ["(" + str (line[0]) + ") " + line[1] + "(" + str(line[2]) + ")"]
+	#				else:
+	#					ret += ["(" + str (line[0]) + ") " + line[1]]
+	#		if not ret:
+	#			ret = ["Pas d'éléments"]
+	#		irc.replies (ret)
+	#	elif action == 'del':
+	#		if not id:
+	#			irc.error ("L'action 'del' requiert un 'id'", Raise=True)
+	#		else:
+	#			{'group': self.reply.delGroup,
+	#					'rule': self.reply.delRule ,
+	#					'reply': self.reply.delReply}[context](id)
+	#			irc.replySuccess()
+	#	elif action == 'add':
+	#		if (context != 'group' and not id) or not content:
+	#			irc.error ("Arguments invalides -> help talk", Raise=True)
+	#		else:
+	#			if context == 'group':
+	#				ret = self.reply.addGroup (content)
+	#			elif context == 'rule':
+	#				ret = self.reply.addRule (id, content)
+	#			elif context == 'reply':
+	#				ret = self.reply.addReply (id, content)
+	#			if ret:
+	#				irc.replySuccess()
+	#			else:
+	#				irc.error('Erreur :/', Raise=True)
 
-	talk = wrap (talk, ['admin', ('literal', ('group', 'rule', 'reply')),
-		('literal', ('add', 'del', 'list')),
-		optional('id'), optional ('text')])
+	#talk = wrap (talk, ['admin', ('literal', ('group', 'rule', 'reply')),
+	#	('literal', ('add', 'del', 'list')),
+	#	optional('id'), optional ('text')])
 
 	def quote(self, irc, msg, args):
 		"""
@@ -288,11 +286,11 @@ class Archfr(callbacks.Plugin):
 	quote = wrap (quote, [])
 
 	# doPrivmsg est lancé à chaque message
-	def doPrivmsg(self, irc, msg):
-		(recipients, text) = msg.args
-		reply = self.reply.randomReply (text)
-		if reply:
-			irc.reply (reply.replace ("%n", msg.nick), prefixNick=False)
+	#def doPrivmsg(self, irc, msg):
+	#	(recipients, text) = msg.args
+	#	reply = self.reply.randomReply (text)
+	#	if reply:
+	#		irc.reply (reply.replace ("%n", msg.nick), prefixNick=False)
 
 Class = Archfr
 
