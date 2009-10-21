@@ -59,10 +59,13 @@ class Archfr(callbacks.Plugin):
 	def web_query (self, irc, site, query, max, nick, ret=True):
 		pages = self.wq.search (site, query)
 		if pages:
+			replies = []
+			for page in pages:
+				replies += page
 			if max != 0:
-				irc.replies(pages[0][:max], to=nick)
+				irc.replies(replies[:max], to=nick)
 			else:
-				irc.replies(pages[0], to=nick)
+				irc.replies(replies, to=nick)
 			return True
 		else:
 			if ret:
