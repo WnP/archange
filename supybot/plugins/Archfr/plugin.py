@@ -136,12 +136,13 @@ class Archfr(callbacks.Plugin):
 
 	bug = wrap (bug, [optional ('nickInChannel'), 'text'])
 
-	def pkgfile(self, irc, msg, args, nick, query):
+	def _pkgfile(self, irc, msg, args, nick, query):
 		"""[nick] path
-		Recherche un paquet dont un fichier correspond à *'path'*.
+		Recherche un paquet dont un fichier correspond à 'path'.
 		"""
 		max = self.registryValue ('pkgfile.max')
-		pkgs = self.ap.searchFile (query)
+		pkgs = self.ap.searchFile (query, max)
+		#irc.reply (pkgs)
 		if not pkgs:
 			irc.reply("Pas de résultat", to=nick)
 		else:
@@ -155,18 +156,38 @@ class Archfr(callbacks.Plugin):
 			reply = []
 			for pkg in pkgs:
 				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' ' + pkg[4]]
-			irc.replies(reply[:max], to=nick)
+			irc.replies(reply, to=nick)
+
+	def filelike(self, irc, msg, args, nick, query):
+		"""[nick] path
+		Recherche un paquet dont un fichier correspond à 'path'.
+		'path' étant un motif compris par la syntaxe SQL LIKE.
+		"""
+		self._pkgfile (irc, msg, args, nick, query)
+
+	filelike = wrap (filelike, [optional ('nickInChannel'), 'text'])
+
+	def pkgfile(self, irc, msg, args, nick, query):
+		"""[nick] path
+		Recherche un paquet dont un fichier correspond à *'path'*.
+		"""
+		self._pkgfile (irc, msg, args, nick, "%" + query + "%")
 
 	pkgfile = wrap (pkgfile, [optional ('nickInChannel'), 'text'])
 
 	def pkg(self, irc, msg, args, nick, query):
 		"""[nick] terme
-		Recherche un paquet correspondant à '*terme*' et bascule éventuellement
-		sur AUR.
+		Recherche un paquet correspondant à 'terme', ou '*terme*' et bascule 
+		éventuellement sur AUR.
 		"""
 		max = self.registryValue ('pkg.max')
-		pkgs = self.ap.searchPkg (query)
+		# Cherche une correpondance exact.
+		pkgs = self.ap.getPkg (query)
 		if not pkgs:
+			# Sinon bascule sur une recherche à la pacman -Ss
+			pkgs = self.ap.searchPkg (query)
+		if not pkgs:
+			# Et enfin bascule sur aur
 			self.aur_func (irc, msg, args, nick, query)
 		else:
 			# arch.ArchPackage.searchPkg retourne une liste de lignes
@@ -178,7 +199,7 @@ class Archfr(callbacks.Plugin):
 			#  description du paquet
 			reply = []
 			for pkg in pkgs:
-				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' ' + pkg[4]]
+				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' (' + pkg[4] + ')']
 			irc.replies(reply[:max], to=nick)
 
 	pkg = wrap (pkg, [optional ('nickInChannel'), 'text'])
