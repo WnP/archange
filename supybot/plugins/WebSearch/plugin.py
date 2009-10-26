@@ -45,6 +45,8 @@ class WebSearch(callbacks.Plugin):
 		else:
 			irc.reply("Erreur lors du chargement de '%s'" % file) 
 
+	load = wrap (load, ['admin', 'text'])
+
 	def save(self, irc, msg, args, file):
 		if file.find ("/") != -1:
 			irc.reply("'%s' n'est pas un fichier valable" % file) 
@@ -54,6 +56,7 @@ class WebSearch(callbacks.Plugin):
 		else:
 			irc.reply("Erreur lors de la sauvegarde de '%s'" % file) 
 			
+	save = wrap (save, ['admin', 'text'])
 
 
 	def search (self, irc, msg, args, site, nick, query):
