@@ -83,7 +83,7 @@ class WebSearch(callbacks.Plugin):
 
 	
 		
-	max = wrap (max, ['somethingWithoutSpaces', 'int'])
+	max = wrap (max, ['somethingWithoutSpaces', 'int', 'admin'])
 
 
 

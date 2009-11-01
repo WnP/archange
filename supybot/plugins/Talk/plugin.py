@@ -18,14 +18,14 @@ import ConfigParser
 import re
 import random
 
-class Talk:
+class Talk(callbacks.Plugin):
 	"""
 	Plugin Talk.
 	"""
 	threaded = True
 
 	def __init__(self, irc):
-		self.__parent = super (Archfr, self)
+		self.__parent = super (Talk, self)
 		self.__parent.__init__(irc)
 		random.seed()
 		self.groups = {}
