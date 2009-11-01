@@ -52,7 +52,7 @@ class Archfr(callbacks.Plugin):
 	def die(self):
 		if self.quote_fd is not None:
 			self.quote_fd.close ()
-			self.ap.setDb (None)
+			self.ap.setDB (None)
 			del self.ap
 			del self.wq
 
