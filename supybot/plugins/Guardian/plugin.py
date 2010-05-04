@@ -18,6 +18,7 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import supybot.schedule as schedule
 import time
+import comparestrings
 
 
 
@@ -40,6 +41,8 @@ class Guardian(callbacks.Plugin):
 		#                      "repeat": repeat list }}}
 		self.nicks = {}
 		self.nicks_moderated = list ()
+		self.t = 0
+		self.m = 0
 
 
 	def sameMsg (self, s1, s2):
@@ -50,7 +53,14 @@ class Guardian(callbacks.Plugin):
 		else:
 			p1 = s2
 			p2 = s1
-		t = len (p1) 
+		t = len (p1) + 1.0
+		m = comparestrings.compare (s1, s2)
+		self.t = t
+		self.m = m
+		if m / t > 0.8: #0.75:
+			return True
+		else:
+			return False
 		m = t - len (p2)
 		t *= 1.0
 		if m / t > 0.9:

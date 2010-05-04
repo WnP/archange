@@ -33,7 +33,9 @@ __url__ = 'http://www.archlinux.fr/'
 
 import config
 import plugin
+import comparestrings
 reload(plugin) # In case we're being reloaded.
+reload(comparestrings)
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 
