@@ -40,8 +40,7 @@ class Talk(callbacks.Plugin):
 			return False
 		self.groups = {}
 		for sect in cfg.sections():
-			if not cfg.has_option (sect, "rule") and cfg.has_option (sect, "replu"):
-				continue
+			sect_valid = True
 			self.groups[sect]={}
 			self.groups[sect]['rules'] = []
 			self.groups[sect]['replies'] = []
@@ -49,12 +48,15 @@ class Talk(callbacks.Plugin):
 				for opt in cfg.items(sect):
 					if opt[0][:4] == "rule":
 						self.groups[sect]['rules'] += [re.compile (opt[1])]
-					else:
+					else if opt[0][:4] == "reply":
 						self.groups[sect]['replies'] += [opt[1]]
+					else:
+						sect_valid = False
 			except:
 				del self.groups[sect]
 				continue
-		print self.groups
+			if not sect_valid:
+				del self.groups[sect]
 		return True
 
 	def writeConfig (self, file=None):
