@@ -26,7 +26,7 @@ class Pacman(callbacks.Plugin):
 	Plugin Pacman.
 	Apporte une interactivité au chan #archlinux-fr@freenode
 	Fonctionnalités:
-		pkg 	-> recherche dans la base des paquets Arch Linux
+		pkg     -> recherche dans la base des paquets Arch Linux
 		pkgfile	-> recherche un paquet contenant un fichier
 	"""
 	threaded = True
@@ -36,13 +36,17 @@ class Pacman(callbacks.Plugin):
 		self.__parent.__init__(irc)
 		random.seed()
 		# Le fichier de la base se trouve par défaut dans le rep 'data' de supybot
-		self.ap = archlinux.PacmanDB (conf.supybot.directories.data.dirize('Pacman.sqlite'))
+		self.ap = archlinux.PacmanDB (conf.supybot.directories.data.dirize('repos'))
+		archs=('i686', 'x86_64',)
+		repos=('core', 'extra', 'community',)
+		for repo in repos:
+			for arch in archs:
+				self.ap.addRepo (repo, arch, 'http://mir.archlinux.fr/' + repo + '/os/' + arch + '/' + repo + '.files.tar.gz')
+		repo='archlinuxfr'
+		for arch in archs:
+			self.ap.addRepo (repo, arch, 'http://repo.archlinux.fr/' + arch + '/' + repo + '.files.tar.gz')
 		self.aur_site = archlinux.Aur ()
 
-
-	def die(self):
-		self.ap.setDB (None)
-		del self.ap
 
 	# La fonction est appelée par 'pkg', d'où la différence de nom avec la
 	# commande IRC.
@@ -55,81 +59,52 @@ class Pacman(callbacks.Plugin):
 		if pkgs:
 			replies = []
 			for pkg in pkgs:
-				replies += [pkg[0] + ' ' + pkg[1] + ' ' + 
-						self.aur_site.getPkgUrl(pkg[2])]
+				replies += [pkg.name + ' ' + pkg.ver + ' ' + 
+						self.aur_site.getPkgUrl(pkg.Id)]
 			irc.replies(replies[:max], to=nick)
 		else:
 			irc.reply("Pas de résultat", to=nick)
 
 	aur = wrap (aur_func, [optional ('nickInChannel'), 'text'])
 
-	def _pkgfile(self, irc, msg, args, nick, query):
+	def pkgfile(self, irc, msg, args, arch, nick, query):
 		"""[nick] path
 		Recherche un paquet dont un fichier correspond à 'path'.
 		"""
 		max = self.registryValue ('pkgfile.max')
-		pkgs = self.ap.searchFile (query, max)
+		pkgs = self.ap.searchFile (arch, query, max)
 		#irc.reply (pkgs)
 		if not pkgs:
 			irc.reply("Pas de résultat", to=nick)
 		else:
-			# arch.ArchPackage.searchFile retourne une liste de lignes
-			# chaque ligne:
-			#  nom du dépot
-			#  nom du paquet
-			#  version du paquet
-			#  release du paquet
-			#  chemin du fichier
 			reply = []
 			for pkg in pkgs:
-				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' ' + pkg[4]]
+				reply += [pkg.repo + ' / ' + pkg.name + ' ' + pkg.ver + ' ' + pkg.files[0]]
 			irc.replies(reply, to=nick)
 
-	def filelike(self, irc, msg, args, nick, query):
-		"""[nick] path
-		Recherche un paquet dont un fichier correspond à 'path'.
-		'path' étant un motif compris par la syntaxe SQL LIKE.
-		"""
-		self._pkgfile (irc, msg, args, nick, query)
+	pkgfileany = wrap (pkgfile, [('literal', ('i686', 'x86_64')), optional ('nickInChannel'), 'text'])
 
-	filelike = wrap (filelike, [optional ('nickInChannel'), 'text'])
-
-	def pkgfile(self, irc, msg, args, nick, query):
-		"""[nick] path
-		Recherche un paquet dont un fichier correspond à *'path'*.
-		"""
-		self._pkgfile (irc, msg, args, nick, "%" + query + "%")
-
-	pkgfile = wrap (pkgfile, [optional ('nickInChannel'), 'text'])
-
-	def pkg(self, irc, msg, args, nick, query):
+	def pkg(self, irc, msg, args, arch, nick, query):
 		"""[nick] terme
 		Recherche un paquet correspondant à 'terme', ou '*terme*' et bascule 
 		éventuellement sur AUR.
 		"""
 		max = self.registryValue ('pkg.max')
 		# Cherche une correpondance exact.
-		pkgs = self.ap.getPkg (query)
+		pkgs = self.ap.getPkg (arch, query, max)
 		if not pkgs:
 			# Sinon bascule sur une recherche à la pacman -Ss
-			pkgs = self.ap.searchPkg (query)
+			pkgs = self.ap.searchPkg (arch, query, max)
 		if not pkgs:
 			# Et enfin bascule sur aur
 			self.aur_func (irc, msg, args, nick, query)
 		else:
-			# arch.ArchPackage.searchPkg retourne une liste de lignes
-			# chaque ligne:
-			#  nom du dépot
-			#  nom du paquet
-			#  version du paquet
-			#  release du paquet
-			#  description du paquet
 			reply = []
 			for pkg in pkgs:
-				reply += [pkg[0] + ' / ' + pkg[1] + ' ' + pkg[2] + '-' + pkg[3] + ' (' + pkg[4] + ')']
-			irc.replies(reply[:max], to=nick)
+				reply += [pkg.repo + ' / ' + pkg.name + ' ' + pkg.ver + ' (' + pkg.description + ')']
+			irc.replies(reply, to=nick)
 
-	pkg = wrap (pkg, [optional ('nickInChannel'), 'text'])
+	pkgany = wrap (pkg, [('literal', ('i686', 'x86_64')), optional ('nickInChannel'), 'text'])
 
 	def pkgsync(self, irc, msg, args):
 		"""Recharge la base des paquets/fichiers
