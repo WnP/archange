@@ -48,7 +48,7 @@ class Talk(callbacks.Plugin):
 				for opt in cfg.items(sect):
 					if opt[0][:4] == "rule":
 						self.groups[sect]['rules'] += [re.compile (opt[1])]
-					else if opt[0][:4] == "reply":
+					elif opt[0][:5] == "reply":
 						self.groups[sect]['replies'] += [opt[1]]
 					else:
 						sect_valid = False
