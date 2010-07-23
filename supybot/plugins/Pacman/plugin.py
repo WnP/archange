@@ -92,9 +92,11 @@ class Pacman(callbacks.Plugin):
 		max = self.registryValue ('pkg.max')
 		# Cherche une correpondance exact.
 		pkgs = self.ap.getPkg (arch, query, max)
+		if pkgs is None: return
 		if not pkgs:
 			# Sinon bascule sur une recherche à la pacman -Ss
 			pkgs = self.ap.searchPkg (arch, query, max)
+		if pkgs is None: return
 		if not pkgs:
 			# Et enfin bascule sur aur
 			self.aur_func (irc, msg, args, nick, query)
