@@ -105,7 +105,7 @@ class Guardian(callbacks.Plugin):
 					if channel in irc.state.channels and \
 					   banmask in irc.state.channels[channel].bans:
 						irc.sendMsg(ircmsgs.unban(channel, banmask))
-				schedule.addEvent(f, period)		
+				schedule.addEvent(f, time.time () + period)
 
 	def removeNick (self, irc, channel, nick, reason):
 		irc.sendMsg(ircmsgs.IrcMsg('remove %s %s : %s' % (channel, 
@@ -196,6 +196,15 @@ class Guardian(callbacks.Plugin):
 
 	moderate = wrap(moderate, [optional ('channel'), 'nickInChannel','admin'])
 
+	def rmnick (self, irc, msg, args, channel, nick, reason):
+		"""[channel] nick reason
+		Enlève l'utilisateur au lieu de le kicker, évite l'autojoin
+		"""
+		if not channel:
+			channel = msg.args[0]
+		self.removeNick (irc, channel, nick, reason)
+
+	rmnick = wrap(rmnick, [optional ('channel'), 'nickInChannel', 'text', 'admin'])
 
 	def unmoderate (self, irc, msg, args, channel, nick):
 		"""[channel] nick
