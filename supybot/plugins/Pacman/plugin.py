@@ -45,6 +45,7 @@ class Pacman(callbacks.Plugin):
 		repo='archlinuxfr'
 		for arch in archs:
 			self.ap.addRepo (repo, arch, 'http://repo.archlinux.fr/' + arch + '/' + repo + '.files.tar.gz')
+		self.ap.addRepo ('multilib', 'x86_64', 'http://mir.archlinux.fr/multilib/os/x86_64/multilib.files.tar.gz')
 		self.aur_site = archlinux.Aur ()
 
 
